@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import com.techox.backend.dto.UserResponse;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -21,7 +23,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponse> createUser(
-            @RequestBody CreateUserRequest request) {
+            @Valid @RequestBody CreateUserRequest request) {
 
         User user = new User();
 
