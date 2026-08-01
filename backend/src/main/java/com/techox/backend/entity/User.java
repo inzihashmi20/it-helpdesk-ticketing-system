@@ -1,5 +1,6 @@
 package com.techox.backend.entity;
 
+import com.techox.backend.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.techox.backend.dto;
 
-import com.techox.backend.entity.Role;
+import com.techox.backend.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
