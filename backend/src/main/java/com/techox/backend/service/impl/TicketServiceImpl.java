@@ -30,9 +30,19 @@ public class TicketServiceImpl implements TicketService {
         this.userRepository = userRepository;
     }
 
+    //    @Override
     @Override
     public List<Ticket> getAllTickets() {
-        return ticketRepository.findAll();
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ticketRepository.findByUser(user);
     }
 
 
