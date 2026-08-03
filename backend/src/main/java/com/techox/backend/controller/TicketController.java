@@ -1,15 +1,18 @@
 package com.techox.backend.controller;
 
 import com.techox.backend.dto.CreateTicketRequest;
+import com.techox.backend.dto.TicketResponse;
 import com.techox.backend.dto.UpdateTicketRequest;
 import com.techox.backend.dto.UpdateTicketStatusRequest;
 import com.techox.backend.entity.Ticket;
+import com.techox.backend.mapper.TicketMapper;
 import com.techox.backend.service.TicketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -22,52 +25,66 @@ public class TicketController {
     }
 
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(
+    public ResponseEntity<TicketResponse> createTicket(
             @RequestBody CreateTicketRequest request) {
-        System.out.println("========== TicketController HIT ==========");
 
         Ticket ticket = ticketService.createTicket(request);
 
-        return new ResponseEntity<>(ticket, HttpStatus.CREATED);
+        TicketResponse response =
+                TicketMapper.toResponse(ticket);
+
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<Ticket>> getAllTickets() {
+    public ResponseEntity<List<TicketResponse>> getAllTickets() {
 
-        List<Ticket> tickets = ticketService.getAllTickets();
+        List<TicketResponse> response =
+                ticketService.getAllTickets()
+                        .stream()
+                        .map(TicketMapper::toResponse)
+                        .collect(Collectors.toList());
 
-        return ResponseEntity.ok(tickets);
+        return ResponseEntity.ok(response);
     }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<Ticket> getTicketById(
+    public ResponseEntity<TicketResponse> getTicketById(
             @PathVariable Long id) {
 
-        Ticket ticket = ticketService.getTicketById(id);
+        Ticket ticket =
+                ticketService.getTicketById(id);
 
-        return ResponseEntity.ok(ticket);
+        return ResponseEntity.ok(
+                TicketMapper.toResponse(ticket)
+        );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Ticket> updateTicket(
+    public ResponseEntity<TicketResponse> updateTicket(
             @PathVariable Long id,
             @RequestBody UpdateTicketRequest request) {
 
-        Ticket updatedTicket = ticketService.updateTicket(id, request);
+        Ticket updatedTicket =
+                ticketService.updateTicket(id, request);
 
-        return ResponseEntity.ok(updatedTicket);
+        return ResponseEntity.ok(
+                TicketMapper.toResponse(updatedTicket)
+        );
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Ticket> updateTicketStatus(
+    public ResponseEntity<TicketResponse> updateTicketStatus(
             @PathVariable Long id,
             @RequestBody UpdateTicketStatusRequest request) {
 
         Ticket updatedTicket =
                 ticketService.updateTicketStatus(id, request);
 
-        return ResponseEntity.ok(updatedTicket);
+        return ResponseEntity.ok(
+                TicketMapper.toResponse(updatedTicket)
+        );
     }
 
     @DeleteMapping("/{id}")

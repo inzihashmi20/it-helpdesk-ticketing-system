@@ -22,16 +22,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        System.out.println("========== SecurityConfig Loaded ==========");
-
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public APIs
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+
+                        // Admin only
+                        .requestMatchers(HttpMethod.DELETE, "/api/tickets/**")
+                        .hasRole("ADMIN")
+
+                        // Admin + Employee
+                        .requestMatchers("/api/tickets/**")
+                        .hasAnyRole("ADMIN", "EMPLOYEE")
+
+                        // Everything else
                         .anyRequest().authenticated()
                 );
-
         http.httpBasic(httpBasic -> {
         });
 

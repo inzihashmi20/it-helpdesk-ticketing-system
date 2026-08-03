@@ -5,6 +5,7 @@ import com.techox.backend.dto.UpdateTicketRequest;
 import com.techox.backend.dto.UpdateTicketStatusRequest;
 import com.techox.backend.entity.Ticket;
 import com.techox.backend.entity.User;
+import com.techox.backend.enums.Role;
 import com.techox.backend.enums.TicketStatus;
 import com.techox.backend.repository.TicketRepository;
 import com.techox.backend.repository.UserRepository;
@@ -75,15 +76,13 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public Ticket getTicketById(Long id) {
 
-        return ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        return getAccessibleTicket(id);
     }
 
     @Override
     public Ticket updateTicket(Long id, UpdateTicketRequest request) {
 
-        Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Ticket ticket = getAccessibleTicket(id);
 
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
@@ -98,8 +97,7 @@ public class TicketServiceImpl implements TicketService {
     public Ticket updateTicketStatus(Long id,
                                      UpdateTicketStatusRequest request) {
 
-        Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+        Ticket ticket = getAccessibleTicket(id);
 
         ticket.setStatus(request.getStatus());
         ticket.setUpdatedAt(LocalDateTime.now());
@@ -110,9 +108,32 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void deleteTicket(Long id) {
 
+        Ticket ticket = getAccessibleTicket(id);
+
+        ticketRepository.delete(ticket);
+    }
+
+    private Ticket getAccessibleTicket(Long id) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String email = authentication.getName();
+
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
 
-        ticketRepository.delete(ticket);
+        if (currentUser.getRole() == Role.ADMIN) {
+            return ticket;
+        }
+
+        if (ticket.getUser().getId().equals(currentUser.getId())) {
+            return ticket;
+        }
+
+        throw new RuntimeException("You are not authorized to access this ticket.");
     }
 }
