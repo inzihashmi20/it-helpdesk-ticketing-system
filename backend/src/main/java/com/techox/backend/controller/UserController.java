@@ -1,15 +1,18 @@
 package com.techox.backend.controller;
 
+import com.techox.backend.dto.ApiResponse;
 import com.techox.backend.dto.CreateUserRequest;
+import com.techox.backend.dto.UserResponse;
 import com.techox.backend.entity.User;
+import com.techox.backend.mapper.UserMapper;
 import com.techox.backend.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import com.techox.backend.dto.UserResponse;
-
-import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
             @Valid @RequestBody CreateUserRequest request) {
 
         User user = new User();
@@ -35,12 +38,10 @@ public class UserController {
 
         User savedUser = userService.createUser(user);
 
-        UserResponse response = new UserResponse(
-                savedUser.getId(),
-                savedUser.getFirstName(),
-                savedUser.getLastName(),
-                savedUser.getEmail(),
-                savedUser.getRole()
+        ApiResponse<UserResponse> response = new ApiResponse<>(
+                true,
+                "User created successfully.",
+                UserMapper.toResponse(savedUser)
         );
 
         return ResponseEntity

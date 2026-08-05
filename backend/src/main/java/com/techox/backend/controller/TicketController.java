@@ -1,9 +1,7 @@
 package com.techox.backend.controller;
 
-import com.techox.backend.dto.CreateTicketRequest;
-import com.techox.backend.dto.TicketResponse;
-import com.techox.backend.dto.UpdateTicketRequest;
-import com.techox.backend.dto.UpdateTicketStatusRequest;
+
+import com.techox.backend.dto.*;
 import com.techox.backend.entity.Ticket;
 import com.techox.backend.mapper.TicketMapper;
 import com.techox.backend.service.TicketService;
@@ -25,7 +23,7 @@ public class TicketController {
     }
 
     @PostMapping
-    public ResponseEntity<TicketResponse> createTicket(
+    public ResponseEntity<ApiResponse> createTicket(
             @RequestBody CreateTicketRequest request) {
 
         Ticket ticket = ticketService.createTicket(request);
@@ -33,11 +31,16 @@ public class TicketController {
         TicketResponse response =
                 TicketMapper.toResponse(ticket);
 
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse(
+                        true,
+                        "Ticket created successfully.",
+                        response
+                ));
     }
 
     @GetMapping
-    public ResponseEntity<List<TicketResponse>> getAllTickets() {
+    public ResponseEntity<ApiResponse> getAllTickets() {
 
         List<TicketResponse> response =
                 ticketService.getAllTickets()
@@ -45,24 +48,34 @@ public class TicketController {
                         .map(TicketMapper::toResponse)
                         .collect(Collectors.toList());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                new ApiResponse(
+                        true,
+                        "Tickets fetched successfully.",
+                        response
+                )
+        );
     }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<TicketResponse> getTicketById(
+    public ResponseEntity<ApiResponse> getTicketById(
             @PathVariable Long id) {
 
         Ticket ticket =
                 ticketService.getTicketById(id);
 
         return ResponseEntity.ok(
-                TicketMapper.toResponse(ticket)
+                new ApiResponse(
+                        true,
+                        "Ticket fetched successfully.",
+                        TicketMapper.toResponse(ticket)
+                )
         );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TicketResponse> updateTicket(
+    public ResponseEntity<ApiResponse> updateTicket(
             @PathVariable Long id,
             @RequestBody UpdateTicketRequest request) {
 
@@ -70,12 +83,16 @@ public class TicketController {
                 ticketService.updateTicket(id, request);
 
         return ResponseEntity.ok(
-                TicketMapper.toResponse(updatedTicket)
+                new ApiResponse(
+                        true,
+                        "Ticket updated successfully.",
+                        TicketMapper.toResponse(updatedTicket)
+                )
         );
     }
 
     @PatchMapping("/{id}/status")
-    public ResponseEntity<TicketResponse> updateTicketStatus(
+    public ResponseEntity<ApiResponse> updateTicketStatus(
             @PathVariable Long id,
             @RequestBody UpdateTicketStatusRequest request) {
 
@@ -83,17 +100,27 @@ public class TicketController {
                 ticketService.updateTicketStatus(id, request);
 
         return ResponseEntity.ok(
-                TicketMapper.toResponse(updatedTicket)
+                new ApiResponse(
+                        true,
+                        "Ticket status updated successfully.",
+                        TicketMapper.toResponse(updatedTicket)
+                )
         );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteTicket(
+    public ResponseEntity<ApiResponse> deleteTicket(
             @PathVariable Long id) {
 
         ticketService.deleteTicket(id);
 
-        return ResponseEntity.ok("Ticket deleted successfully.");
+        return ResponseEntity.ok(
+                new ApiResponse(
+                        true,
+                        "Ticket deleted successfully.",
+                        null
+                )
+        );
     }
 
 }

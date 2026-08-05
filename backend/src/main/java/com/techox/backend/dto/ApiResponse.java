@@ -2,13 +2,15 @@ package com.techox.backend.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-public class ApiResponse {
+@NoArgsConstructor
+public class ApiResponse<T> {
 
     private boolean success;
     private String message;
-    private Object data;
+    private T data;
 
 }
