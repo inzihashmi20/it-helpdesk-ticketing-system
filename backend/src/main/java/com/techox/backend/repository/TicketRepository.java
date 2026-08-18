@@ -17,4 +17,13 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     long countByStatus(TicketStatus status);
 
     long countByPriority(Priority priority);
+
+    // ===== NEW METHODS =====
+
+    long countByUser(User user);
+
+    long countByUserAndStatus(User user, TicketStatus status);
+
+    long countByUserAndPriority(User user, Priority priority);
+
 }

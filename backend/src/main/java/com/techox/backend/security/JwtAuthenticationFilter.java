@@ -1,5 +1,6 @@
 package com.techox.backend.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,61 +30,98 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(
+            @NonNull HttpServletRequest request) {
+
+        /*
+         * Login is a public endpoint.
+         * Do NOT try to validate an old/expired JWT
+         * when the user is trying to log in again.
+         */
+        return request.getServletPath().equals("/api/auth/login");
+    }
+
+    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        System.out.println("DELETE FILTER CALLED");
         String authHeader = request.getHeader("Authorization");
 
-        System.out.println("========== FILTER START ==========");
+        System.out.println("========== JWT FILTER ==========");
         System.out.println("URI = " + request.getRequestURI());
-        System.out.println("Header = " + authHeader);
 
+        /*
+         * No Authorization header.
+         * Continue normally.
+         */
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+
             filterChain.doFilter(request, response);
             return;
         }
 
         String jwt = authHeader.substring(7);
-        System.out.println("JWT = " + jwt);
 
-        String userEmail = jwtService.extractEmail(jwt);
-        System.out.println("Email = " + userEmail);
+        try {
 
-        if (userEmail != null
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String userEmail = jwtService.extractEmail(jwt);
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(userEmail);
+            System.out.println("Email = " + userEmail);
 
-            System.out.println("Loading user: " + userEmail);
+            if (userEmail != null
+                    && SecurityContextHolder.getContext()
+                    .getAuthentication() == null) {
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(userEmail);
 
-                System.out.println("TOKEN VALID");
+                if (jwtService.isTokenValid(jwt, userDetails)) {
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                    System.out.println("TOKEN VALID");
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request)
-                );
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
+
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(authToken);
+                }
             }
-        }
 
-        System.out.println("CONTINUING FILTER CHAIN");
+        } catch (ExpiredJwtException e) {
+
+            /*
+             * Token has expired.
+             *
+             * We do NOT crash the request.
+             * Simply continue without authentication.
+             *
+             * Spring Security will return 401 automatically
+             * if the requested endpoint requires authentication.
+             */
+            System.out.println("JWT EXPIRED");
+
+        } catch (Exception e) {
+
+            /*
+             * Invalid/malformed JWT.
+             * Don't crash the server.
+             */
+            System.out.println("INVALID JWT: " + e.getMessage());
+        }
 
         filterChain.doFilter(request, response);
     }
-
 }

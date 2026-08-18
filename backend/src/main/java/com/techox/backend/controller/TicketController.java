@@ -41,6 +41,7 @@ public class TicketController {
 
     @GetMapping
     public ResponseEntity<ApiResponse> getAllTickets() {
+        System.out.println(">>> INSIDE GET ALL TICKETS");
 
         List<TicketResponse> response =
                 ticketService.getAllTickets()
